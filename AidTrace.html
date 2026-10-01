@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AidTrace</title>
+<style>
+:root{--bg:#eef3f2;--card:#fff;--ink:#12302f;--mut:#5b706e;--line:#d8e3e1;--pri:#0b7a68;--side:#0c2b2a;--sideink:#cfe3df;--acc:#f2b84b;--warn:#92580a;--warnbg:#fff4d6;--bad:#b42318;--ok:#0f7a3d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1716;--card:#132422;--ink:#e3efec;--mut:#93aaa6;--line:#243b38;--pri:#35b9a1;--side:#071b1a;--warn:#fbbf24;--warnbg:#3b2f0b;--bad:#f87171;--ok:#4ade80}}
+:root[data-theme="dark"]{--bg:#0b1716;--card:#132422;--ink:#e3efec;--mut:#93aaa6;--line:#243b38;--pri:#35b9a1;--side:#071b1a;--warn:#fbbf24;--warnbg:#3b2f0b;--bad:#f87171;--ok:#4ade80}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,sans-serif}
+.app{display:flex;align-items:flex-start}
+.side{width:216px;flex:none;position:sticky;top:0;height:100dvh;background:var(--side);color:var(--sideink);padding:18px 12px;display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;font:700 19px Georgia,serif;color:#fff;margin:0 6px 18px}
+.brand i{width:26px;height:26px;border-radius:8px;background:var(--acc);display:grid;place-items:center;color:#0c2b2a;font:700 14px system-ui;font-style:normal}
+.side button{display:flex;align-items:center;gap:10px;background:none;border:0;border-left:3px solid transparent;color:inherit;text-align:left;padding:10px 12px;border-radius:0 8px 8px 0;cursor:pointer;font:inherit}
+.side button:hover{background:rgba(255,255,255,.07)}
+.side button.on{background:rgba(255,255,255,.13);border-left-color:var(--acc);color:#fff;font-weight:600}
+.ic{width:20px;text-align:center}
+.foot{margin-top:auto;font-size:12px;opacity:.7;padding:0 8px}
+main{flex:1;min-width:0;max-width:900px;margin:0 auto;padding:22px 20px 40px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+h1{font:700 24px Georgia,serif;margin:0}
+h2{font:600 17px Georgia,serif;margin:0 0 4px}
+.note{color:var(--mut);font-size:13px}
+.who{display:flex;flex-direction:column;gap:6px;min-width:230px}
+.who .r{display:flex;gap:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.btn{background:var(--pri);color:#fff;border:1px solid var(--pri);padding:9px 16px;border-radius:8px;cursor:pointer;margin-top:12px;font:600 14px inherit;font-family:inherit}
+.btn:hover{filter:brightness(1.1)}
+.btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+.warn{background:var(--warnbg);color:var(--warn);border:1px solid var(--warn);padding:12px;border-radius:10px;margin-top:12px}
+.msg{background:rgba(15,122,61,.1);color:var(--ok);padding:10px 12px;border-radius:10px;margin-top:12px}
+.empty{padding:22px;text-align:center;color:var(--mut);border:1px dashed var(--line);border-radius:10px;margin-top:10px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:8px}
+th{font-size:12px;color:var(--mut);font-weight:600}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.VERIFIED,td.PENDING,td.REJECTED{font-weight:600}
+.VERIFIED{color:var(--ok)}.PENDING{color:var(--warn)}.REJECTED{color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-top:10px}
+.stat{padding:12px;border-radius:10px;background:var(--bg);font-size:13px;color:var(--mut)}
+.stat b{display:block;font:700 28px Georgia,serif;color:var(--pri)}
+.qr{display:inline-grid;grid-template-columns:repeat(9,7px);gap:1px;padding:6px;background:#fff;border:1px solid var(--line);flex:none}
+.qr i{width:7px;height:7px;background:#fff}.qr i.k{background:#000}
+.idcard{border:2px dashed var(--pri);border-radius:12px;padding:12px;margin-top:12px;display:flex;gap:14px;align-items:center}
+.item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.grow{flex:1;min-width:0}
+.steps{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.steps span{font-size:12px;padding:2px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mut)}
+.steps span.done{background:var(--pri);border-color:var(--pri);color:#fff}
+.bar2{display:inline-block;width:90px;height:8px;border-radius:4px;background:var(--line);vertical-align:middle;margin-right:6px}
+.bar2 span{display:block;height:100%;border-radius:4px;background:var(--pri)}
+details.card summary{cursor:pointer;font-weight:600}
+details.card ol{margin:8px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
+#toast{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:30}
+#toast .t{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+@media (max-width:720px){
+.app{display:block}
+.side{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;height:auto;flex-direction:row;justify-content:space-around;padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px));z-index:20;gap:0}
+.brand,.foot{display:none}
+.side button{flex-direction:column;gap:0;font-size:11px;padding:6px 4px;border-left:0;border-top:3px solid transparent;border-radius:0 0 8px 8px}
+.side button.on{border-top-color:var(--acc)}
+main{padding:16px 14px 90px}
+#toast{bottom:84px;right:12px;left:12px}
+.who{width:100%}
+}
+
+.b{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.hero{background:var(--side);color:#fff;border-radius:14px;padding:22px;margin-bottom:14px}
+.hero h2{font:700 23px Georgia,serif;color:#fff;margin:0 0 8px}
+.hero p{margin:0 0 8px;color:#cfe3df;max-width:640px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.g>div{background:var(--bg);border-radius:10px;padding:12px;font-size:14px}
+.g b{display:block;margin-bottom:2px}
+.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--pri);color:#fff;font-size:13px;font-weight:700;margin-right:6px}
+.chk{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.exp{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:14px}
+.ev{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ev .ico{font-size:18px;width:26px;text-align:center;flex:none}
+.ev.mod{background:var(--warnbg);margin:0 -8px;padding:10px 8px;border-radius:8px}
+.btn{min-height:40px}
+
+:root{--bg:#f3f1ff;--card:#fff;--ink:#1e1b3a;--mut:#5f5b7a;--line:#e1ddf7;--pri:#6366f1;--side:#1e1b4b;--sideink:#c9c7f2;--acc:#fbbf24;--warn:#8a5200;--warnbg:#fff1c2;--ok:#0e8f4f;--bad:#d11f3f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#110f29;--card:#1b1840;--ink:#edecff;--mut:#aaa7d2;--line:#322e63;--side:#0c0a22;--warn:#fbbf24;--warnbg:#3a2d0a;--ok:#4ade80;--bad:#fb7185}}
+:root[data-theme="dark"]{--bg:#110f29;--card:#1b1840;--ink:#edecff;--mut:#aaa7d2;--line:#322e63;--side:#0c0a22;--warn:#fbbf24;--warnbg:#3a2d0a;--ok:#4ade80;--bad:#fb7185}
+body{background:radial-gradient(1000px 500px at 90% -10%,color-mix(in srgb,#ec4899 14%,transparent),transparent),radial-gradient(900px 500px at -10% 10%,color-mix(in srgb,#06b6d4 14%,transparent),transparent),var(--bg)}
+main{--pri:#6366f1}
+main[data-tab=register]{--pri:#0d9488}main[data-tab=verify]{--pri:#2563eb}main[data-tab=distribute]{--pri:#ea580c}
+main[data-tab=complaints]{--pri:#db2777}main[data-tab=audit]{--pri:#7c3aed}main[data-tab=public]{--pri:#16a34a}
+.side{background:linear-gradient(180deg,#312e81,#1e1b4b 60%,#0f172a)}
+.ic{width:30px;height:30px;border-radius:9px;background:var(--c,#6366f1);color:#fff;display:grid;place-items:center;font-size:15px;transition:transform .2s}
+.side button:hover .ic{transform:rotate(-8deg) scale(1.1)}
+.cnt{margin-left:auto;background:#fbbf24;color:#1e1b4b;border-radius:99px;font-size:11px;font-weight:700;padding:0 8px;font-style:normal}
+.card{border-top:4px solid var(--pri);transition:box-shadow .2s}
+.card:hover{box-shadow:0 8px 24px color-mix(in srgb,var(--pri) 18%,transparent)}
+h1{color:var(--pri)}
+.btn{background:var(--pri);border-color:var(--pri);box-shadow:0 3px 0 rgba(0,0,0,.2);transition:transform .12s,box-shadow .12s,filter .12s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn.alt{background:transparent;color:var(--pri);border-color:var(--pri);box-shadow:none}
+.btn.alt:hover{background:color-mix(in srgb,var(--pri) 12%,transparent);box-shadow:none}
+input:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px color-mix(in srgb,var(--pri) 25%,transparent);outline:none}
+.hero{background:linear-gradient(135deg,#6366f1,#ec4899 60%,#f59e0b);position:relative;overflow:hidden;border-top:0}
+.hero::after{content:"💧 🍚";position:absolute;right:16px;top:10px;font-size:28px;opacity:.9}
+.hero p{color:#fff;opacity:.95}
+.g>div{border:1px solid var(--line);background:var(--card);transition:transform .15s,box-shadow .15s}
+.g>div:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(99,102,241,.2)}
+.g>div:nth-child(1) .num{background:#0d9488}.g>div:nth-child(2) .num{background:#2563eb}.g>div:nth-child(3) .num{background:#ea580c}.g>div:nth-child(4) .num{background:#16a34a}
+.chk{border-radius:10px;padding:12px 8px;transition:background .15s}
+.chk:hover{background:color-mix(in srgb,var(--pri) 8%,transparent)}
+.stat{background:color-mix(in srgb,var(--s,#6366f1) 13%,var(--card));border:1px solid color-mix(in srgb,var(--s,#6366f1) 30%,transparent);transition:transform .15s}
+.stat:hover{transform:scale(1.04)}
+.stat b{color:var(--s,#6366f1)}
+.stats .stat:nth-child(1){--s:#6366f1}.stats .stat:nth-child(2){--s:#16a34a}.stats .stat:nth-child(3){--s:#f59e0b}.stats .stat:nth-child(4){--s:#ec4899}
+.stats .stat:nth-child(5){--s:#db2777}.stats .stat:nth-child(6){--s:#ea580c}.stats .stat:nth-child(7){--s:#0891b2}.stats .stat:nth-child(8){--s:#7c3aed}
+.b.VERIFIED{background:color-mix(in srgb,var(--ok) 15%,transparent)}.b.PENDING{background:var(--warnbg)}.b.REJECTED{background:color-mix(in srgb,var(--bad) 15%,transparent)}
+.exp{border-left-color:var(--pri);background:color-mix(in srgb,var(--pri) 7%,var(--card))}
+.warn{animation:pop .3s}
+.ev{transition:background .15s}.ev:hover{background:color-mix(in srgb,var(--pri) 7%,transparent)}
+.bar2 span{background:linear-gradient(90deg,#16a34a,#06b6d4)}
+tr:hover td{background:color-mix(in srgb,var(--pri) 6%,transparent)}
+#toast .t{background:var(--card);color:var(--ink);border-left:5px solid var(--pri);animation:pop .25s}
+@keyframes pop{from{transform:translateY(10px) scale(.97);opacity:0}}
+.cf{position:fixed;top:-30px;font-size:22px;pointer-events:none;z-index:50;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.cf{display:none}}
+
+.det{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:10px 0}
+.det div{background:var(--bg);border-radius:8px;padding:8px 10px;font-size:14px}
+.det span{display:block;font-size:12px;color:var(--mut)}
+.vcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+.vh{font-size:16px}
+label.ck{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:14px;font-weight:400}
+label.ck input{width:auto;margin-top:4px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+details summary{cursor:pointer;font-weight:600}
+.em{font-size:32px;display:block;margin-bottom:2px}.g>div{text-align:center}.g>div .btn{margin-top:10px}details.card summary{font-size:15px}.side button.lock{opacity:.4}.side button.lock .ic{filter:grayscale(1)}#role{line-height:1.6}.cnt{display:none}main[data-tab=alerts]{--pri:#dc2626}.needs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px 12px}</style>
+</head>
+<body>
+<div class="app">
+<aside class="side"><div class="brand"><i>A</i>AidTrace</div><div id="nav" style="display:contents"></div><div class="foot">Demo with sample data. Your changes are saved in this browser. Use Reset demo to start over.</div></aside>
+<main>
+<header class="bar"><div><h1 id="title"></h1><div class="note" id="sub"></div></div>
+<div class="who"><label style="margin:0">Who are you? (demo: pick a person)</label><div class="r"><select id="user"></select><button class="btn alt" style="margin:0;white-space:nowrap" onclick="reset()">Reset demo</button></div><div class="note" id="role"></div></div></header>
+<div id="view"></div>
+</main></div>
+<div id="toast"></div>
+<script>
+const USERS=[
+ {id:"W-17",name:"Worker W-17 (NGO Alpha)",org:"NGO Alpha",role:"field"},
+ {id:"W-22",name:"Worker W-22 (NGO Beta)",org:"NGO Beta",role:"field"},
+ {id:"V-12",name:"Checker V-12 (Govt Relief)",org:"Govt Relief",role:"verifier"},
+ {id:"S-04",name:"Supervisor S-04 (Admin)",org:"Govt Relief",role:"admin"}];
+let me=USERS[0],tab="home",seq=1,H=[],D=[],A=[],C=[],selHH="",dupe=null,flash="";
+const VILLAGES=["Village A","Village B","Village C"];
+const now=()=>new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+const code=()=>"KHP-07-"+String(seq++).padStart(6,"0");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function $(i){return document.getElementById(i)}
+function toast(m){const e=document.createElement("div");e.className="t";e.textContent=m;$("toast").appendChild(e);setTimeout(()=>e.remove(),2600)}
+function log(action,what,oldv,newv,reason){A.unshift({t:now(),by:me.id,action,what,oldv,newv,reason:reason||"-"});toast(action+": "+what)}
+function sim(a,b){a=a.toLowerCase().trim();b=b.toLowerCase().trim();const m=[];for(let i=0;i<=a.length;i++){m[i]=[i];for(let j=1;j<=b.length;j++)m[i][j]=i?0:j}
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]==b[j-1]?0:1));
+ return 1-m[a.length][b.length]/Math.max(a.length,b.length,1)}
+function fakeQR(c){let h=0;for(const ch of c)h=(h*31+ch.charCodeAt(0))>>>0;let s="";for(let i=0;i<81;i++){h=(h*1103515245+12345)>>>0;const edge=(i%9<2&&i<18)||(i%9>6&&i<18)||(i%9<2&&i>62);s+=`<i class="${(h>>16)&1||edge?"k":""}"></i>`}return `<div class="qr">${s}</div>`}
+function seed(){
+ const f={code:code(),name:"Fatima",members:4,village:"Village A",status:"VERIFIED",by:"W-17",org:"NGO Alpha",vby:"V-12"};
+ const a={code:code(),name:"Bilal Khan",members:6,village:"Village B",status:"VERIFIED",by:"W-22",org:"NGO Beta",vby:"V-12"};
+ const c={code:code(),name:"Zainab Bibi",members:3,village:"Village C",status:"PENDING",by:"W-22",org:"NGO Beta"};
+ H.push(f,a,c);
+ D.push({id:"DST-000001",hh:f.code,aid:"Rice (25kg)",qty:1,org:"NGO Alpha",by:"W-17",t:"09:30"});
+}
+seed();
+const TABS=[
+["register","Register","✎","Register a household","Add a family and get a permanent Household ID. Possible duplicates are flagged for a human to decide."],
+["verify","Verify","✔","Verify and manage","A second person checks each registration. If a family moves, only the location changes."],
+["distribute","Distribute","⇄","Record aid delivery","Scan or pick a household ID, then record what was handed over."],
+["complaints","Complaints","✉","Report missing aid","Families can report that they were left out. Staff move each case to resolved."],
+["audit","Audit log","☰","Audit log","Every change keeps the old value, new value, who made it and why."],
+["public","Public","◔","Public dashboard","Totals only. No names, phone numbers or exact addresses."]];
+const ROLES={field:"Field worker: can register and record distributions.",verifier:"Checker: can approve or reject, and move complaints forward.",admin:"Admin: can also edit distribution records, with a reason."};
+const ST=["OPEN","UNDER_REVIEW","RESOLVED"];
+function nav(){$("nav").innerHTML=TABS.map(t=>`<button class="${t[0]==tab?"on":""}" onclick="go('${t[0]}')"><span class="ic">${t[2]}</span><span>${t[1]}</span></button>`).join("")}
+function go(k){tab=k;dupe=null;flash="";render()}
+document.getElementById("user").innerHTML=USERS.map(u=>`<option value="${u.id}">${u.name}</option>`).join("");
+document.getElementById("user").onchange=e=>{me=USERS.find(u=>u.id==e.target.value);render()};
+const vOpts=(sel)=>VILLAGES.map(v=>`<option ${v==sel?"selected":""}>${v}</option>`).join("");
+
+function viewRegister(){
+ let h=`<div class="card"><h2>Register a household</h2>
+ <div class="note">Try: "Fatema", 4 members, Village A (similar to the existing Fatima).</div>
+ <div class="row"><div><label>Head of household</label><input id="rn"></div>
+ <div><label>Members</label><input id="rm" type="number" min="1" value="4"></div>
+ <div><label>Village</label><select id="rv">${vOpts()}</select></div>
+ <div><label>Phone</label><input id="rp"></div></div>
+ <button class="btn" onclick="tryRegister()">Register household</button>`;
+ if(dupe){h+=`<div class="warn"><b>Possible duplicate household found</b><br>Existing: ${dupe.h.code} (${esc(dupe.h.name)}, ${dupe.h.members} members, ${dupe.h.village}). Similarity: ${Math.round(dupe.s*100)}%.<br>
+ <button class="btn alt" onclick="resolveDupe(true)">Same household</button> <button class="btn alt" onclick="resolveDupe(false)">Different household</button></div>`}
+ if(flash)h+=flash;
+ return h+`</div>`}
+function tryRegister(){
+ const n=rn.value.trim(),m=+rm.value,v=rv.value;if(!n){flash=`<div class="warn">Enter the head of household's name.</div>`;return render()}
+ const best=H.map(h=>({h,s:sim(n,h.name)})).filter(x=>x.h.village==v&&x.h.members==m&&x.s>=0.7).sort((a,b)=>b.s-a.s)[0];
+ window._p={name:n,members:m,village:v};
+ if(best){dupe=best;flash="";return render()}
+ create();}
+function create(){const p=window._p,c=code();H.push({code:c,...p,status:"PENDING",by:me.id,org:me.org});log("REGISTERED",c,"-",p.name+" / "+p.village);dupe=null;
+ flash=`<div class="msg">Registered. Household ID: <b>${c}</b>. Next: a different person must check it (Step 2).</div><div class="idcard">${fakeQR(c)}<div><b>AIDTRACE</b><br>${c}<br><span class="note">Keep this card safe</span></div></div>`;render()}
+function resolveDupe(same){const d=dupe;
+ if(same){log("DUPLICATE CONFIRMED",d.h.code,"-","Registration blocked, same household","Reviewed by "+me.id);flash=`<div class="msg">Marked as the same household. No new record created. Use ID <b>${d.h.code}</b>.</div>`;dupe=null;render()}
+ else{log("DUPLICATE DISMISSED",d.h.code,"-","Different household","Reviewed by "+me.id);create()}}
+
+function viewVerify(){
+ const pend=H.filter(h=>h.status=="PENDING");
+ let h=`<div class="card"><h2>Waiting for a second person to check</h2>`;
+ if(!pend.length)h+=`<div class="note">Nothing is waiting. Register a family first (Step 1).</div>`;
+ pend.forEach(x=>{const own=x.by==me.id;h+=`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${x.code}</b> ${esc(x.name)}, ${x.members} members, ${x.village}<br><span class="note">Registered by ${x.by} (${x.org})</span><br>`+
+ (me.role=="field"?`<span class="note">Only a Checker can approve. Change the role at the top right.</span>`:own?`<span class="note">You registered this household, so someone else must verify it.</span>`:
+ `<button class="btn" onclick="verify('${x.code}','VERIFIED')">Approve</button> <button class="btn alt" onclick="verify('${x.code}','REJECTED')">Reject</button>`)+`</div>`});
+ h+=`</div><div class="card"><h2>All families in the list</h2><div class="scroll"><table><tr><th>ID</th><th>Name</th><th>Location</th><th>Status</th><th>Family moved? Change place</th></tr>`;
+ H.forEach(x=>{h+=`<tr><td>${x.code}</td><td>${esc(x.name)}</td><td>${x.village}</td><td>${badge(x.status)}</td><td><select id="mv-${x.code}" style="width:auto">${vOpts(x.village)}</select> <button class="btn alt" style="margin:0" onclick="move('${x.code}')">Update</button></td></tr>`});
+ return h+`</table></div><div class="note">If a family moves, the ID stays the same. Only the location changes.</div></div>`}
+function verify(c,s){const x=H.find(h=>h.code==c);log("VERIFICATION",c,x.status,s);x.status=s;x.vby=me.id;render()}
+function move(c){const x=H.find(h=>h.code==c),v=document.getElementById("mv-"+c).value;if(v==x.village)return;log("LOCATION CHANGED",c,x.village,v,"Family relocated");x.village=v;render()}
+
+function viewDist(){
+ const ok=H.filter(h=>h.status=="VERIFIED");
+ let h=`<div class="card"><h2>Give aid to a checked family</h2><div class="note">Only checked families are listed. In real use the worker scans the family's ID card instead of choosing from a list.</div>
+ ${preview(ok)}<div class="row"><div><label>Family</label><select id="dh" onchange="selHH=this.value;render()">${ok.map(x=>`<option value="${x.code}" ${x.code==selHH?"selected":""}>${x.code} ${esc(x.name)}</option>`).join("")}</select></div>
+ <div><label>Aid item</label><select id="da"><option>Rice (25kg)</option><option>Water (20L)</option><option>Shelter kit</option><option>Cash</option></select></div>
+ <div><label>Quantity</label><input id="dq" type="number" min="1" value="1"></div></div>
+ <button class="btn" onclick="distribute()">Confirm distribution</button>${flash}</div>
+ <div class="card"><h2>Distribution records</h2><div class="scroll"><table><tr><th>ID</th><th>Family</th><th>Aid</th><th>Qty</th><th>By</th><th>Edit quantity</th></tr>`;
+ D.forEach(d=>{h+=`<tr><td>${d.id}</td><td>${d.hh}</td><td>${d.aid}</td><td>${d.qty}</td><td>${d.org}<br><span class="note">${d.by} ${d.t}</span></td>
+ <td>${me.role=="admin"?`<input id="eq-${d.id}" type="number" value="${d.qty}" style="width:70px"> <input id="er-${d.id}" placeholder="Reason (required)" style="width:150px"> <button class="btn alt" style="margin:0" onclick="editQty('${d.id}')">Save</button>`:`<span class="note">Admin only</span>`}</td></tr>`});
+ return h+`</table></div></div>`}
+function distribute(){const hh=dh.value,aid=da.value,q=+dq.value;if(!hh)return;
+ const prev=D.find(d=>d.hh==hh&&d.aid==aid);
+ const id="DST-"+String(D.length+1).padStart(6,"0");D.push({id,hh,aid,qty:q,org:me.org,by:me.id,t:now()});log("DISTRIBUTED",hh,"-",aid+" x"+q);
+ flash=prev?`<div class="warn">Warning: this household already received "${aid}" earlier (${prev.org}, ${prev.t}). Recorded anyway, flagged for review.</div>`:`<div class="msg">Recorded ${id}: ${aid} x${q} for ${hh}.</div>`;render()}
+function editQty(id){const d=D.find(x=>x.id==id),q=+document.getElementById("eq-"+id).value,r=document.getElementById("er-"+id).value.trim();
+ if(!r){flash=`<div class="warn">A reason is required to change a record.</div>`;return render()}
+ if(q==d.qty)return;log("RECORD MODIFIED",id+" ("+d.hh+")","qty "+d.qty,"qty "+q,r);d.qty=q;flash="";render()}
+
+function viewAudit(){
+ let h=`<div class="card"><h2>Audit log</h2><div class="note">Nothing is overwritten silently. Every change keeps the old value, new value, who and why.</div><div class="scroll"><table><tr><th>Time</th><th>By</th><th>Action</th><th>Record</th><th>Old</th><th>New</th><th>Reason</th></tr>`;
+ A.forEach(a=>{const mod=a.action=="RECORD MODIFIED";h+=`<tr style="${mod?"background:var(--warnbg)":""}"><td>${a.t}</td><td>${a.by}</td><td>${a.action}</td><td>${esc(a.what)}</td><td>${esc(a.oldv)}</td><td>${esc(a.newv)}</td><td>${esc(a.reason)}</td></tr>`});
+ if(!A.length)h+=`<tr><td colspan="7" class="note">No changes yet. Register or edit something.</td></tr>`;
+ return h+`</table></div></div>`}
+
+function viewPublic(){
+ const c=s=>H.filter(h=>h.status==s).length,sum=a=>D.filter(d=>d.aid.startsWith(a)).reduce((t,d)=>t+d.qty,0);
+ const dups=A.filter(a=>a.action.startsWith("DUPLICATE")).length;
+ let h=`<div class="card"><h2>Public numbers (totals only)</h2><div class="note"><b>Shown:</b> totals per place. <b>Never shown:</b> names, phone numbers, addresses.</div><div class="stats">
+ <div class="stat"><b>${H.length}</b>Registered</div><div class="stat"><b>${c("VERIFIED")}</b>Checked</div><div class="stat"><b>${c("PENDING")}</b>Waiting for check</div><div class="stat"><b>${dups}</b>Possible repeats reviewed</div><div class="stat"><b>${C.filter(c=>c.status!="RESOLVED").length}</b>Open complaints</div>
+ <div class="stat"><b>${sum("Rice")}</b>Rice packs</div><div class="stat"><b>${sum("Water")}</b>Water packs</div><div class="stat"><b>${sum("Shelter")}</b>Shelter kits</div></div></div>
+ <div class="card"><h2>By location</h2><table><tr><th>Location</th><th>Registered</th><th>Checked</th><th>Aid packages</th></tr>`;
+ VILLAGES.forEach(v=>{const hs=H.filter(x=>x.village==v);if(!hs.length)return;const cs=hs.map(x=>x.code);h+=`<tr><td>${v}</td><td>${hs.length}</td><td>${hs.filter(x=>x.status=="VERIFIED").length}</td><td>${bar(D.filter(d=>cs.includes(d.hh)).reduce((t,d)=>t+d.qty,0))}</td></tr>`});
+ return h+`</table><button class="btn" onclick="go('complaints')">Report missing aid</button></div>`}
+
+function bar(n){return `<span class="bar2"><span style="width:${Math.min(100,n*12)}%"></span></span>${n}`}
+function preview(ok){const x=ok.find(h=>h.code==selHH)||ok[0];if(!x)return `<div class="empty">No checked families yet. Approve one in the Check tab first.</div>`;selHH=x.code;const hi=D.filter(d=>d.hh==x.code);
+ return `<div class="idcard">${fakeQR(x.code)}<div><b>${x.code}</b> ${esc(x.name)}<br><span class="note">${x.members} members, ${x.village}</span><br><span class="note">Aid so far: ${hi.length?hi.map(d=>d.aid+" x"+d.qty).join(", "):"none"}</span></div></div>`}
+function guide(){return tab!="register"?"":`<details class="card"><summary>Demo guide: 6 steps</summary><ol><li>Register "Fatema", 4 members, Village A. A duplicate warning appears.</li><li>Choose "Same household". No new record is made.</li><li>Register a new family, then switch to Checker V-12 and approve it.</li><li>In Verify, move a family to Village C. The ID stays the same.</li><li>In Distribute, give aid. Give the same item twice to see the warning.</li><li>Switch to Supervisor S-04, edit a quantity with a reason, then open Audit log and Public.</li></ol></details>`}
+function viewComplaints(){
+ let h=`<div class="card"><h2>Tell us if a family was left out or recorded wrongly</h2><div class="note">Any family or helper can file this. No login needed.</div>
+ <div class="row"><div><label>Family ID (if known)</label><input id="ch" placeholder="KHP-07-000001"></div>
+ <div><label>What happened?</label><select id="cc"><option>We were not registered</option><option>Registered but received no aid</option><option>Our information is incorrect</option><option>We moved</option><option>We received less than recorded</option></select></div></div>
+ <label>Details</label><input id="cd"><button class="btn" onclick="fileComplaint()">Submit complaint</button></div>
+ <div class="card"><h2>Cases</h2>`;
+ if(!C.length)h+=`<div class="empty">No complaints yet.</div>`;
+ C.forEach(c=>{const i=ST.indexOf(c.status);h+=`<div class="item"><div class="grow"><b>${c.id}</b> ${esc(c.cat)}<br><span class="note">${esc(c.hh||"No ID given")}${c.desc?", "+esc(c.desc):""}</span>
+ <div class="steps">${ST.map((x,j)=>`<span class="${j<=i?"done":""}">${x.replace("_"," ")}</span>`).join("")}</div></div>
+ ${i<2&&me.role!="field"?`<button class="btn alt" style="margin:0" onclick="advance('${c.id}')">Move to ${ST[i+1].replace("_"," ")}</button>`:i<2?`<span class="note">Checker action</span>`:""}</div>`});
+ return h+`</div>`}
+function fileComplaint(){const id="CMP-"+String(C.length+1).padStart(5,"0");C.push({id,hh:ch.value.trim().toUpperCase(),cat:cc.value,desc:cd.value.trim(),status:"OPEN"});log("COMPLAINT FILED",id,"-","OPEN");render()}
+function advance(id){const c=C.find(x=>x.id==id),n=ST[ST.indexOf(c.status)+1];log("COMPLAINT UPDATED",id,c.status,n);c.status=n;render()}
+function seedC(){C.push({id:"CMP-00001",hh:"KHP-07-000003",cat:"Registered but received no aid",desc:"Waiting since Monday",status:"OPEN"})}
+function reset(){seq=1;H=[];D=[];A=[];C=[];dupe=null;flash="";selHH="";seed();seedC();render();toast("Demo reset")}
+function render(){const t=TABS.find(x=>x[0]==tab);nav();$("title").textContent=t[3];$("sub").textContent=t[4];$("role").textContent=ROLES[me.role];
+ $("view").innerHTML=guide()+{register:viewRegister,verify:viewVerify,distribute:viewDist,complaints:viewComplaints,audit:viewAudit,public:viewPublic}[tab]()}
+// ---------- Plain-language UI layer ----------
+const TABS2=[
+["home","Home","⌂","Start here","What AidTrace is, how to use it, and how to check that it really works."],
+["register","Register","✎","Step 1: Register a family","Write down a family that needs help. They get one permanent ID number."],
+["verify","Check","✔","Step 2: Check the registration","A different person confirms the details are real before any aid is given."],
+["distribute","Give aid","⇄","Step 3: Give aid","Hand out aid to a checked family and record exactly what was given."],
+["complaints","Complaints","✉","Report missing aid","Any family can say they were left out or recorded wrongly."],
+["audit","History","☰","History of every change","A permanent diary. Nothing is changed without leaving a trace."],
+["public","Public","◔","Public numbers","Totals anyone can see. Names and phone numbers are never shown."]];
+TABS.length=0;TABS2.forEach(t=>TABS.push(t));
+Object.assign(ROLES,{field:"Field worker: registers families and gives aid. Cannot approve registrations.",verifier:"Checker: checks registrations made by other people and moves complaints forward.",admin:"Supervisor: can also correct an aid record, but must give a reason that is saved forever."});
+const WHY={
+register:["Records a family once and gives them a single permanent ID.","Field workers","The same family registered twice under different names."],
+verify:["A second person confirms the details. Nobody can approve their own registration.","Checkers","Wrong or inflated numbers entered by one person."],
+distribute:["Pick a checked family, choose the aid, confirm. The system warns if they already got it.","Field workers from any organisation","Two organisations giving the same family the same aid."],
+complaints:["Families report that they were left out or recorded wrongly. Staff move each case to resolved.","Families and checkers","Families with no voice when the list is wrong."],
+audit:["A permanent diary of who did what, when and why.","Anyone who wants to check the system","Pressure to quietly change numbers."],
+public:["Totals for each place with no personal data.","The public, donors, journalists","Lack of transparency, without exposing vulnerable people."]};
+function explain(){const w=WHY[tab];return w?`<div class="exp"><b>What this screen does:</b> ${w[0]}<br><b>Who uses it:</b> ${w[1]}. <b>Problem it solves:</b> ${w[2]}</div>`:""}
+function badge(st){const t={PENDING:"Waiting for check",VERIFIED:"Checked ✔",REJECTED:"Rejected"}[st]||st;return `<span class="b ${st}">${t}</span>`}
+function goDemo(u,k){me=USERS.find(x=>x.id==u);$("user").value=u;go(k)}
+
+function viewHome(){
+ const P=[
+ ["A flooded village that no team knows about","Anyone can report it from the Alerts screen. The team sees urgent and bigger cases first, and can call back.","alerts","PUB"],
+ ["The same family gets aid twice under different names","The system compares name, family size, place and ID number and warns \"maybe the same family\". A person decides.","register","W-22"],
+ ["NGOs and government keep separate lists","Everyone uses one shared list. Each family has one ID, such as KHP-07-000001.","verify","V-12"],
+ ["Field workers are pressured to change numbers","Every change is saved with who, when, old value, new value and a required reason. Nothing is silently overwritten.","audit","S-04"],
+ ["Families move, so lists go out of date","The ID never changes. Only the place is updated, and the move is recorded.","verify","V-12"],
+ ["Families have no papers, phone or internet","The ID card with a scannable square code replaces papers. Working without internet is future work (see limits below).","register","W-17"]];
+ const T=[
+ ["Same-family warning","Pretend to be W-22. Register Fatema, 4 people, Village A.","A yellow box says this family may already exist (Fatima, about 83% match). Choose \"Yes, same family\": no new record is made.","W-22","register"],
+ ["Two-person check","As W-17 register any new family. Then choose Checker V-12 at the top right and open Check.","The family shows as Waiting for check. As Checker V-12 a family card with 4 points to confirm appears. Tick all four, then Approve. (W-17 cannot even open the Check screen.)","W-17","register"],
+ ["Family moves, ID stays","As V-12 open Check. Change a family's place and press Update.","The ID is the same. Only the place changed.","V-12","verify"],
+ ["Same aid twice is flagged","As W-17 give Rice (25kg) to Fatima twice.","The second time a yellow warning says the family already received it.","W-17","distribute"],
+ ["Changes need a reason","As S-04 open Give aid. Change a quantity, first with no reason, then with a reason.","Without a reason it is refused. With a reason it is saved.","S-04","distribute"],
+ ["Permanent history","Open History.","The change above appears as a yellow row with old value, new value, who and why.","S-04","audit"],
+ ["Privacy","Open Public.","Only totals per place. No names or phone numbers.","W-17","public"],
+ ["Village the team does not know about","As Family / public open Alerts. Report Kot Rampur, 30 families, tick Food and Clean water, send. Then choose Checker V-12, open Alerts and press Send a team, then Team has reached the village.","The team sees the report with a phone number, the most urgent first. Once reached, the village appears in the Register list.","PUB","alerts"],
+ ["Start again","Press Reset demo (top right).","The sample data comes back, so you can repeat the demo from the start.","W-17","register"]];
+ return `<div class="hero"><h2>One shared list for disaster aid</h2>
+ <p>Every family gets one ID. A second person checks every entry. Every change is saved in a history.</p>
+ <p><b>Roman Urdu:</b> Madad ki aik shared list. Har khandaan ki aik ID, aur har tabdeeli ka record.</p>
+ <button class="btn" style="background:#fff;color:#4338ca;border-color:#fff" onclick="startDemo()">▶ Start the demo</button> <button class="btn" style="background:#dc2626;border-color:#fff" onclick="goDemo('PUB','alerts')">🚨 My village needs help</button></div>
+ <div class="card"><h2>Who are you?</h2><div class="note">Each person sees only the screens they need. The rest are locked 🔒.</div><div class="row" style="margin-top:8px"><button class="btn alt" onclick="goDemo('W-17','register')">👷 Field worker</button><button class="btn alt" onclick="goDemo('V-12','verify')">🕵️ Checker</button><button class="btn alt" onclick="goDemo('S-04','audit')">🛡️ Supervisor</button><button class="btn alt" onclick="goDemo('PUB','alerts')">🙋 Family / public</button></div></div>
+ <div class="g">
+ <div><span class="em">📝</span><b>1. Register</b>Write down a family.<br><button class="btn alt" onclick="goDemo('W-17','register')">Open</button></div>
+ <div><span class="em">✅</span><b>2. Check</b>A second person confirms it is real.<br><button class="btn alt" onclick="goDemo('V-12','verify')">Open</button></div>
+ <div><span class="em">🎁</span><b>3. Give aid</b>Record what each family got.<br><button class="btn alt" onclick="goDemo('W-17','distribute')">Open</button></div>
+ <div><span class="em">📊</span><b>4. Public numbers</b>Totals for everyone. No names.<br><button class="btn alt" onclick="goDemo('W-17','public')">Open</button></div></div>
+ 
+ <details class="card"><summary>More details (for judges)</summary>
+ <h2 style="margin-top:14px">The problems and our answer</h2><div class="scroll"><table><tr><th>Problem today</th><th>What AidTrace does</th><th>See it</th></tr>
+ ${P.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><button class="btn alt" style="margin:0" onclick="goDemo('${r[3]}','${r[2]}')">Open</button></td></tr>`).join("")}</table></div>
+ <h2 style="margin-top:18px">Check it yourself (about 5 minutes)</h2><div class="note">Each row says what to do and what you should see. Go picks the right person and screen.</div>
+ ${T.map((r,i)=>`<div class="chk"><div><b>${i+1}. ${r[0]}</b><br><span class="note">Do: ${r[1]}<br>Expect: ${r[2]}</span></div><button class="btn" style="margin:0" onclick="goDemo('${r[3]}','${r[4]}')">Go</button></div>`).join("")}
+ <h2 style="margin-top:18px">What this demo does not do</h2><ul style="margin:6px 0 0;padding-left:20px;color:var(--mut)">
+ <li>No real login yet: roles are picked from a menu. Real use needs a proper login and safe storage.</li>
+ <li>The system only points out families that may be the same. A person decides. It never calls anyone a fraudster.</li>
+ <li>No fingerprints or face scans, on purpose.</li><li>The helpline and SMS ideas on the Alerts screen are not live in this demo.</li>
+ <li>The ID card picture is a demo. Working without internet is future work.</li>
+ <li>It does not claim to end corruption. It makes changes visible and reviewable.</li>
+ <li>Inspired by systems used by the UN World Food Programme and UNICEF.</li></ul></details>`}
+
+function viewRegister(){
+ let h=`<div class="card"><h2>Family details</h2><div class="note">Demo: type "Fatema", 4 people, Village A. A similar family (Fatima) already exists.</div>
+ <div class="row"><div><label>Name of the family head</label><input id="rn" placeholder="e.g. Fatema"></div>
+ <div><label>Number of people in the family</label><input id="rm" type="number" min="1" value="4"></div>
+ <div><label>Where are they now?</label><select id="rv">${vOpts()}</select></div></div>
+ <button class="btn" onclick="tryRegister()">Register this family</button>`;
+ if(dupe)h+=`<div class="warn"><b>This family may already be registered.</b><br>Existing record: <b>${dupe.h.code}</b>, ${esc(dupe.h.name)}, ${dupe.h.members} people, ${dupe.h.village}. The name matches ${Math.round(dupe.s*100)}%.<br>The system only flags this. You decide:<br>
+ <button class="btn alt" onclick="resolveDupe(true)">Yes, same family (do not create a new record)</button> <button class="btn alt" onclick="resolveDupe(false)">No, a different family (create a new record)</button></div>`;
+ if(flash)h+=flash;return h+`</div>`}
+
+function viewAudit(){
+ const ic={REGISTERED:"✎",VERIFICATION:"✔","LOCATION CHANGED":"➜",DISTRIBUTED:"⇄","RECORD MODIFIED":"⚠","DUPLICATE CONFIRMED":"⧉","DUPLICATE DISMISSED":"⧉","COMPLAINT FILED":"✉","COMPLAINT UPDATED":"✉","ALERT RECEIVED":"🚨","ALERT UPDATED":"🚨"};
+ const say=a=>({REGISTERED:`registered family ${a.what} (${a.newv})`,VERIFICATION:`${a.newv} family ${a.what}`,"LOCATION CHANGED":`moved ${a.what} from ${a.oldv} to ${a.newv}`,DISTRIBUTED:`gave aid to ${a.what}: ${a.newv}`,"RECORD MODIFIED":`CHANGED a record ${a.what}: ${a.oldv} became ${a.newv}`,"DUPLICATE CONFIRMED":`confirmed ${a.what} is the same family, no new record made`,"DUPLICATE DISMISSED":`decided this is a different family from ${a.what}`,"COMPLAINT FILED":`complaint ${a.what} was filed`,"COMPLAINT UPDATED":`moved complaint ${a.what} from ${a.oldv} to ${a.newv}`,"ALERT RECEIVED":`received flood report ${a.what}: ${a.newv}`,"ALERT UPDATED":`moved flood report ${a.what} from ${a.oldv} to ${a.newv}`}[a.action]||a.action);
+ let h=`<div class="card"><h2>Every change, newest first</h2><div class="note">This list only grows: the app has no way to edit or delete an entry. Yellow rows are corrections to records and always show a reason.</div>`;
+ if(!A.length)h+=`<div class="empty">Nothing yet. Register a family to see the first entry.</div>`;
+ A.forEach(a=>{const mod=a.action=="RECORD MODIFIED";h+=`<div class="ev ${mod?"mod":""}"><div class="ico">${ic[a.action]||"•"}</div><div><b>${esc(a.by)}</b> ${esc(say(a))}.${a.reason&&a.reason!="-"?`<br><span class="note">Reason: ${esc(a.reason)}</span>`:""}<br><span class="note">${a.t}</span></div></div>`});
+ return h+`</div>`}
+
+function render(){const t=TABS.find(x=>x[0]==tab);nav();$("title").textContent=t[3];$("sub").textContent=t[4];$("role").textContent=ROLES[me.role];
+ $("view").innerHTML=explain()+{home:viewHome,register:viewRegister,verify:viewVerify,distribute:viewDist,complaints:viewComplaints,audit:viewAudit,public:viewPublic}[tab]()}
+
+
+// ---------- Colour and interaction layer ----------
+const COL={home:"#6366f1",register:"#0d9488",verify:"#2563eb",distribute:"#ea580c",complaints:"#db2777",audit:"#7c3aed",public:"#16a34a"};
+const TL={REGISTERED:"✅ Family registered",VERIFICATION:"✔ Check saved","LOCATION CHANGED":"➜ Place updated",DISTRIBUTED:"🎁 Aid recorded","RECORD MODIFIED":"⚠ Record corrected","DUPLICATE CONFIRMED":"⧉ Marked as the same family","DUPLICATE DISMISSED":"⧉ Marked as a different family","COMPLAINT FILED":"✉ Complaint filed","COMPLAINT UPDATED":"✉ Complaint updated"};
+let anim=true;
+function confetti(){if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)return;const E=["🎉","✨","💚","🍚","💧","⭐"];for(let i=0;i<22;i++){const e=document.createElement("span");e.className="cf";e.textContent=E[i%E.length];e.style.left=Math.random()*100+"vw";e.style.animationDelay=Math.random()*.4+"s";document.body.appendChild(e);setTimeout(()=>e.remove(),2300)}}
+function log(action,what,oldv,newv,reason){A.unshift({t:now(),by:me.id,action,what,oldv,newv,reason:reason||"-"});toast((TL[action]||action)+": "+what);
+ if(action=="REGISTERED"||action=="DISTRIBUTED"||(action=="VERIFICATION"&&newv=="approved")||newv=="RESOLVED")confetti()}
+function go(k){tab=k;dupe=null;flash="";anim=true;render();window.scrollTo(0,0)}
+function startDemo(){goDemo("W-22","register");const r=$("rn");if(r)r.value="Fatema"}
+function cnt(k){return k=="verify"?H.filter(h=>h.status=="PENDING").length:k=="complaints"?C.filter(c=>c.status!="RESOLVED").length:0}
+function nav(){$("nav").innerHTML=TABS.map(t=>{const n=cnt(t[0]);return `<button class="${t[0]==tab?"on":""}" style="--c:${COL[t[0]]}" onclick="go('${t[0]}')"><span class="ic">${t[2]}</span><span>${t[1]}</span>${n?`<em class="cnt">${n}</em>`:""}</button>`}).join("")}
+function countUp(){document.querySelectorAll(".stat b").forEach(e=>{const n=+e.textContent;if(!n)return;let t0=null;const f=ts=>{t0=t0||ts;const p=Math.min(1,(ts-t0)/600);e.textContent=Math.round(n*p);if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
+function render(){const t=TABS.find(x=>x[0]==tab);nav();document.querySelector("main").dataset.tab=tab;$("title").textContent=t[3];$("sub").textContent=t[4];$("role").textContent=ROLES[me.role];
+ $("view").innerHTML=explain()+{home:viewHome,alerts:viewAlerts,register:viewRegister,verify:viewVerify,distribute:viewDist,complaints:viewComplaints,audit:viewAudit,public:viewPublic}[tab]();if(anim){countUp();anim=false}}
+// ---------- Detailed family check, plain words ----------
+let DRAFT={};
+const sw=t=>`<div class="warn">${t}</div>`;
+function seed(){H.push(
+{code:code(),name:"Fatima",members:4,village:"Village A",landmark:"Near the school",phone:"",idno:"",status:"VERIFIED",by:"W-17",org:"NGO Alpha",vby:"V-12",t:"09:10",vt:"09:20"},
+{code:code(),name:"Bilal Khan",members:6,village:"Village B",landmark:"Blue gate by the well",phone:"0300-1234567",idno:"",status:"VERIFIED",by:"W-22",org:"NGO Beta",vby:"V-12",t:"09:15",vt:"09:25"},
+{code:code(),name:"Zainab Bibi",members:3,village:"Village C",landmark:"Behind the mosque",phone:"",idno:"11111-1111111-1",status:"PENDING",by:"W-22",org:"NGO Beta",t:"09:40"});
+ D.push({id:"DST-000001",hh:"KHP-07-000001",aid:"Rice (25kg)",qty:1,org:"NGO Alpha",by:"W-17",t:"09:30"})}
+function tryRegister(){const g=i=>$(i).value.trim();
+ DRAFT={rn:g("rn"),rm:g("rm"),rv:g("rv"),rl:g("rl"),rp:g("rp"),ri:g("ri")};
+ const n=DRAFT.rn,m=+DRAFT.rm,v=DRAFT.rv,id=DRAFT.ri;
+ if(!n){flash=sw("Please type the name of the family head.");return render()}
+ if(!(m>=1)){flash=sw("Please enter the number of people in the family.");return render()}
+ window._p={name:n,members:m,village:v,idno:id,phone:DRAFT.rp,landmark:DRAFT.rl};
+ const best=H.map(h=>({h,s:(id&&h.idno&&id==h.idno)?1:sim(n,h.name)})).filter(x=>x.s==1||(x.h.village==v&&x.h.members==m&&x.s>=0.7)).sort((a,b)=>b.s-a.s)[0];
+ if(best){dupe=best;flash="";return render()}
+ create()}
+function create(){const p=window._p,c=code();H.push({code:c,...p,status:"PENDING",by:me.id,org:me.org,t:now()});log("REGISTERED",c,"-",p.name+" / "+p.village);dupe=null;DRAFT={};
+ flash=`<div class="msg">Done. This family's ID is <b>${c}</b>. Next: a different person must check it (Step 2).</div><div class="idcard">${fakeQR(c)}<div><b>AIDTRACE</b><br>${c}<br><span class="note">Give this card to the family. They keep the same ID even if they move.</span></div></div>`;render()}
+function resolveDupe(same){const d=dupe;
+ if(same){log("DUPLICATE CONFIRMED",d.h.code,"-","Same family, no new record made","Decided by "+me.id);flash=`<div class="msg">Marked as the same family. No new record was made. Use the existing ID <b>${d.h.code}</b>.</div>`;dupe=null;DRAFT={};render()}
+ else{log("DUPLICATE DISMISSED",d.h.code,"-","Different family","Decided by "+me.id);create()}}
+function viewRegister(){const d=DRAFT;
+ let h=`<div class="card"><h2>Family details</h2><div class="note">Demo: type "Fatema", 4 people, Village A. A similar family (Fatima) is already on the list.</div>
+ <div class="row"><div><label>Name of the family head</label><input id="rn" value="${esc(d.rn||"")}" placeholder="e.g. Fatema"></div>
+ <div><label>Number of people in the family</label><input id="rm" type="number" min="1" value="${d.rm||4}"></div>
+ <div><label>Where are they now?</label><select id="rv">${vOpts(d.rv)}</select></div>
+ <div><label>Landmark</label><input id="rl" value="${esc(d.rl||"")}" placeholder="e.g. Near the school"></div>
+ <div><label>Phone number</label><input id="rp" value="${esc(d.rp||"")}"></div>
+ <div><label>ID card number</label><input id="ri" value="${esc(d.ri||"")}" placeholder="Leave empty if no papers"></div></div>
+ <div class="note" style="margin-top:6px">Many families lost their papers in the flood. An ID card is never required.</div>
+ <button class="btn" onclick="tryRegister()">Register this family</button>${flash&&!dupe?flash:""}`;
+ if(dupe)h+=`<div class="warn"><b>This family may already be on the list.</b><br>Existing record: <b>${dupe.h.code}</b>, ${esc(dupe.h.name)}, ${dupe.h.members} people, ${dupe.h.village}.<br>${dupe.s==1?"The ID card number is the same.":"The name looks "+Math.round(dupe.s*100)+"% the same."}<br>The system only points this out. You decide:<br>
+ <button class="btn alt" onclick="resolveDupe(true)">Yes, same family (do not add again)</button> <button class="btn alt" onclick="resolveDupe(false)">No, a different family (add as new)</button></div>`;
+ return h+`</div>`}
+
+function simList(x){return H.filter(h=>h.code!=x.code&&((h.village==x.village&&sim(h.name,x.name)>=0.6)||(x.idno&&h.idno==x.idno)))}
+function det(x){return `<div class="det"><div><span>People</span>${x.members}</div><div><span>Staying at</span>${x.village}</div><div><span>Landmark</span>${esc(x.landmark||"not given")}</div><div><span>Phone</span>${esc(x.phone||"not given")}</div><div><span>ID card number</span>${esc(x.idno||"none (normal after a disaster)")}</div><div><span>Registered by</span>${x.by} (${x.org}) at ${x.t||"-"}</div></div>`}
+function tick(c){$("ap-"+c).disabled=![0,1,2,3].every(i=>$("ck-"+c+"-"+i).checked)}
+function viewVerify(){
+ const pend=H.filter(h=>h.status=="PENDING");
+ let h=`<div class="card"><h2>Waiting for a second person to check (${pend.length})</h2><div class="note">The checker makes sure the family is real before any aid is given.</div>${flash}`;
+ if(!pend.length)h+=`<div class="empty">Nothing is waiting. Register a family first (Step 1).</div>`;
+ pend.forEach(x=>{const own=x.by==me.id,sm=simList(x);
+  h+=`<div class="vcard"><div class="vh"><b>${x.code}</b> ${esc(x.name)} ${badge(x.status)}</div>${det(x)}
+  <div class="${sm.length?"warn":"msg"}" style="margin:8px 0">${sm.length?`<b>Maybe the same family as:</b> ${sm.map(m=>`${m.code} (${esc(m.name)}, ${m.village})`).join(", ")}. Look carefully before approving.`:"No similar family found on the list."}</div>`;
+  if(me.role=="field")h+=`<div class="note">Only a Checker can approve. Change the role at the top right.</div>`;
+  else if(own)h+=`<div class="note">You registered this family, so another person must check it. This stops one person from approving their own list.</div>`;
+  else h+=`<b>Before you approve, confirm each point:</b><div class="note">Tick all four boxes to unlock the Approve button.</div>${["I met the family, or a local leader who knows them.","The number of people is correct.","The place where they are staying is correct.","They are not already on the list under another name."].map((t,i)=>`<label class="ck"><input type="checkbox" id="ck-${x.code}-${i}" onchange="tick('${x.code}')"> ${t}</label>`).join("")}
+  <label>Notes</label><input id="vn-${x.code}" placeholder="e.g. Met the family head at home">
+  <button class="btn" id="ap-${x.code}" disabled onclick="verify('${x.code}','VERIFIED')">Approve this family</button>
+  <label>Or reject. Why?</label><div class="row"><select id="rr-${x.code}"><option value="">Choose a reason</option><option>Family was not found at this place</option><option>Details do not match</option><option>Already on the list</option><option>Other</option></select><div><button class="btn alt" style="margin-top:0" onclick="verify('${x.code}','REJECTED')">Reject</button></div></div>`;
+  h+=`</div>`});
+ h+=`</div><div class="card"><h2>All families on the list</h2><div class="note">Tap a name to see all details.</div><div class="scroll"><table><tr><th>ID</th><th>Family</th><th>People</th><th>Place</th><th>Status</th><th>Family moved? Change place</th></tr>`;
+ H.forEach(x=>{h+=`<tr><td>${x.code}</td><td><details><summary>${esc(x.name)}</summary>${det(x)}${x.vby?`<div class="note">Checked by ${x.vby}${x.vt?" at "+x.vt:""}${x.note?". Note: "+esc(x.note):""}${x.reason?". Reason: "+esc(x.reason):""}</div>`:""}</details></td><td>${x.members}</td><td>${x.village}</td><td>${badge(x.status)}</td><td><select id="mv-${x.code}" style="width:auto">${vOpts(x.village)}</select> <button class="btn alt" style="margin:0" onclick="move('${x.code}')">Update</button></td></tr>`});
+ return h+`</table></div><div class="note">If a family moves, its ID stays the same. Only the place changes.</div></div>`}
+function verify(c,st){const x=H.find(h=>h.code==c),note=($("vn-"+c)||{}).value||"";flash="";
+ if(st=="REJECTED"){const r=$("rr-"+c).value;if(!r){flash=sw("Please choose a reason before rejecting.");return render()}
+  log("VERIFICATION",c,"waiting for check","rejected","Reason: "+r+(note?". Note: "+note:""));x.status="REJECTED";x.reason=r}
+ else{log("VERIFICATION",c,"waiting for check","approved","All 4 points confirmed"+(note?". Note: "+note:""));x.status="VERIFIED";x.note=note}
+ x.vby=me.id;x.vt=now();render()}
+
+// ---------- Screens open by role ----------
+USERS.push({id:"PUB",name:"Family / public visitor",org:"Public",role:"public"});
+Object.assign(ROLES,{public:"Family or public visitor: can report missing aid and see public totals."});
+const ACCESS={field:["home","alerts","register","distribute","complaints","public"],verifier:["home","alerts","verify","complaints","audit","public"],admin:["home","alerts","register","verify","distribute","complaints","audit","public"],public:["home","alerts","complaints","public"]};
+const LAND={field:"register",verifier:"verify",admin:"audit",public:"alerts"};
+const CAN={field:["Register families, give aid, see and report flood alerts","Approve registrations or change records"],verifier:["Check and approve registrations, answer flood alerts and complaints, read the history","Register families, give aid or change records"],admin:["See everything and correct aid records, with a reason","Change anything without leaving a record"],public:["Report a flood or missing aid, and see public totals","See names, phone numbers or family details"]};
+const RN={field:"A field worker",verifier:"A checker",admin:"A supervisor",public:"A public visitor"};
+function roleNote(){const c=CAN[me.role];return `<b>${esc(me.name)}</b><br><span style="color:var(--ok)">✔ Can:</span> ${c[0]}<br><span style="color:var(--bad)">✖ Cannot:</span> ${c[1]}`}
+function nav(){$("nav").innerHTML=TABS.map(t=>{const ok=ACCESS[me.role].includes(t[0]),n=0;return `<button class="${t[0]==tab?"on":""}${ok?"":" lock"}" style="--c:${COL[t[0]]}" onclick="go('${t[0]}')"><span class="ic">${ok?t[2]:"🔒"}</span><span>${t[1]}</span>${n?`<em class="cnt">${n}</em>`:""}</button>`}).join("")}
+function go(k){if(!ACCESS[me.role].includes(k)){toast("🔒 "+RN[me.role]+" cannot open this screen.");return}tab=k;dupe=null;flash="";anim=true;render();window.scrollTo(0,0)}
+function goDemo(u,k){const ch=me.id!=u;me=USERS.find(x=>x.id==u);$("user").value=u;if(ch)toast("You are now: "+me.name);go(k)}
+$("user").onchange=e=>{me=USERS.find(u=>u.id==e.target.value);toast("You are now: "+me.name);go(LAND[me.role])};
+function fileComplaint(){const id="CMP-"+String(C.length+1).padStart(5,"0");C.push({id,hh:$("ch").value.trim().toUpperCase(),cat:$("cc").value,desc:$("cd").value.trim(),status:"OPEN"});log("COMPLAINT FILED",id,"-","OPEN");flash=`<div class="msg">Thank you. Your complaint number is <b>${id}</b>. Staff will review it.</div>`;render()}
+const _vc=viewComplaints;
+viewComplaints=function(){let h=_vc();
+ if(me.role=="public"){const i=h.indexOf('<div class="card"><h2>Cases</h2>');if(i>0)h=h.slice(0,i)+`<div class="card"><h2>What happens next</h2><div class="note">Staff review every complaint. Keep your complaint number. You cannot see other people's complaints: this protects their privacy.</div></div>`}
+ return flash+h}
+function render(){if(!ACCESS[me.role].includes(tab))tab=LAND[me.role];const t=TABS.find(x=>x[0]==tab);nav();document.querySelector("main").dataset.tab=tab;$("title").textContent=t[3];$("sub").textContent=t[4];$("role").innerHTML=roleNote();
+ $("view").innerHTML=explain()+{home:viewHome,alerts:viewAlerts,register:viewRegister,verify:viewVerify,distribute:viewDist,complaints:viewComplaints,audit:viewAudit,public:viewPublic}[tab]();if(anim){countUp();anim=false}}
+
+// ---------- Flood alerts: how a team learns about a village ----------
+TABS.splice(1,0,["alerts","Alerts","🚨","Flood alerts","If a village is hit by a flood and no team knows yet, anyone can report it here."]);
+COL.alerts="#dc2626";
+Object.assign(TL,{"ALERT RECEIVED":"🚨 Flood report received","ALERT UPDATED":"🚨 Flood report updated"});
+WHY.alerts=["Anyone can tell the relief team that a village was hit, and what it needs.","Villagers, local leaders, volunteers, and the relief team","A flooded village that no team knows about."];
+const BASEV=["Village A","Village B","Village C"];
+const NEEDS=["Food","Clean water","Shelter","Medicine","Rescue (people stuck)"];
+const AS=["NEW","TEAM_SENT","REACHED"],AL={NEW:"Received",TEAM_SENT:"Team on the way",REACHED:"Team reached"};
+let ALERTS=[];
+function seedC(){C.push({id:"CMP-00001",hh:"KHP-07-000003",cat:"Registered but received no aid",desc:"Waiting since Monday",status:"OPEN"});
+ VILLAGES.length=0;BASEV.forEach(v=>VILLAGES.push(v));
+ ALERTS=[{id:"ALT-00001",village:"Kot Ahmed",fam:60,needs:["Food","Clean water"],danger:true,note:"Main road is under water. Near the old mosque.",contacts:[{n:"Rashid (local leader)",ph:"0300-0000000"}],reports:2,status:"NEW",t:"08:50"}]}
+function fileAlert(){const v=$("al-v").value.trim(),f=+$("al-f").value,n=$("al-n").value.trim(),ph=$("al-p").value.trim(),x=$("al-x").value.trim(),d=$("al-d").checked,needs=[...document.querySelectorAll(".al-need:checked")].map(e=>e.value);
+ if(!v){flash=sw("Please type the village or area name.");return render()}
+ if(!(f>=1)){flash=sw("Please enter about how many families are affected.");return render()}
+ const a=ALERTS.find(z=>z.village.toLowerCase()==v.toLowerCase()&&z.status!="REACHED");
+ if(a){a.reports++;a.fam=Math.max(a.fam,f);needs.forEach(k=>{if(!a.needs.includes(k))a.needs.push(k)});a.danger=a.danger||d;if(n||ph)a.contacts.push({n,ph});if(x)a.note+=" | "+x;
+  log("ALERT RECEIVED",a.id,"-","another report for "+a.village);
+  flash=`<div class="msg">This village was already reported, so your report was added to it (now ${a.reports} reports). Report number: <b>${a.id}</b>. Several reports make it easier for the team to trust it.</div>`}
+ else{const id="ALT-"+String(ALERTS.length+1).padStart(5,"0");ALERTS.push({id,village:v,fam:f,needs,danger:d,note:x,contacts:(n||ph)?[{n,ph}]:[],reports:1,status:"NEW",t:now()});
+  log("ALERT RECEIVED",id,"-",v+", about "+f+" families");
+  flash=`<div class="msg">Thank you. The relief team can now see this. Your report number is <b>${id}</b>.${d?" Since people are in danger, please also call your local emergency number now.":""}</div>`}
+ render()}
+function advanceAlert(id){const a=ALERTS.find(x=>x.id==id),n=AS[AS.indexOf(a.status)+1];log("ALERT UPDATED",id,AL[a.status],AL[n]);a.status=n;
+ if(n=="REACHED"&&!VILLAGES.some(v=>v.toLowerCase()==a.village.toLowerCase())){VILLAGES.push(a.village);toast("📍 "+a.village+" is now in the Register list")}render()}
+function viewAlerts(){
+ let h=flash+`<div class="card"><h2>Report a flood or call for help</h2><div class="note">Anyone can use this: a villager, a local leader, a volunteer or a neighbour. One report is enough for the team to start.</div>
+ <div class="row"><div><label>Village or area name</label><input id="al-v" placeholder="e.g. Kot Rampur"></div>
+ <div><label>About how many families are affected?</label><input id="al-f" type="number" min="1" value="20"></div>
+ <div><label>Your name</label><input id="al-n"></div>
+ <div><label>Phone number (so the team can call you)</label><input id="al-p"></div></div>
+ <label>What is needed? Tick all that apply</label><div class="needs">${NEEDS.map(x=>`<label class="ck"><input type="checkbox" class="al-need" value="${x}"> ${x}</label>`).join("")}</div>
+ <label class="ck" style="margin-top:8px"><input type="checkbox" id="al-d"> <b>People are in danger right now</b></label>
+ <label>Anything else? Road condition, landmark, how to find you</label><input id="al-x" placeholder="e.g. Main road is under water. Near the old mosque.">
+ <button class="btn" onclick="fileAlert()">Send report</button></div>
+ <div class="card"><h2>Want to contact the relief team?</h2><div class="g">
+ <div><span class="em">📞</span><b>Call the helpline</b>Demo number: 0800-00000. Say the village name and how many families.</div>
+ <div><span class="em">💬</span><b>Send an SMS</b>Idea for later: send "FLOOD, village, families" to one number. Works without internet.</div>
+ <div><span class="em">🧑‍🤝‍🧑</span><b>Tell a leader or volunteer</b>They can report for the whole village from this screen.</div></div>
+ <div class="note" style="margin-top:8px">No phone or internet? Ask someone nearby, or a passing relief worker, to report for you. The helpline and SMS are examples and are not live in this demo.</div></div>`;
+ if(me.role=="public")h+=`<div class="card"><h2>What happens next</h2><div class="note">The relief team sees your report, the most urgent first. They may call the number you gave, then go to the village. Keep your report number. You cannot see other people's reports: this protects their privacy.</div></div>`;
+ else{const L=ALERTS.slice().sort((a,b)=>(b.danger-a.danger)||(b.fam-a.fam));
+  h+=`<div class="card"><h2>Flood reports from villages (${L.length})</h2><div class="note">Urgent ones first, then the biggest. Several reports for one village means it is more likely to be real.</div>`;
+  if(!L.length)h+=`<div class="empty">No reports yet.</div>`;
+  L.forEach(a=>{const n=H.filter(x=>x.village.toLowerCase()==a.village.toLowerCase()).length,i=AS.indexOf(a.status);
+   h+=`<div class="vcard"><div class="vh"><b>${esc(a.village)}</b> ${a.danger?'<span class="b REJECTED">URGENT: people in danger</span>':""} <span class="b">${a.reports} report${a.reports>1?"s":""}</span></div>
+   <div class="det"><div><span>Families affected (estimate)</span>${a.fam}</div><div><span>Needs</span>${esc(a.needs.join(", ")||"not said")}</div><div><span>Families registered here so far</span>${n}${n==0?" (no one yet)":""}</div><div><span>First report at</span>${a.t}</div></div>
+   ${a.contacts.length?`<div class="note">Call back: ${a.contacts.map(c=>`${esc(c.n||"someone")} ${c.ph?`<a href="tel:${esc(c.ph)}">${esc(c.ph)}</a>`:""}`).join(", ")}</div>`:`<div class="note">No phone number given.</div>`}
+   ${a.note?`<div class="note">Note: ${esc(a.note)}</div>`:""}
+   <div class="steps">${AS.map((x,j)=>`<span class="${j<=i?"done":""}">${AL[x]}</span>`).join("")}</div>
+   ${i<2?`<button class="btn" onclick="advanceAlert('${a.id}')">${i==0?"Send a team":"Team has reached the village"}</button>`:`<div class="note" style="margin-top:6px">This village is now in the Register list. Go to Register to add its families.</div>`}</div>`});
+  h+=`</div>`}
+ return h+`<details class="card"><summary>How do teams find out about a flooded village?</summary><ol class="note" style="margin:8px 0 0;padding-left:20px;font-size:14px"><li>Villagers or local leaders report it here, or by phone.</li><li>Volunteers and field workers report villages they pass.</li><li>Later: an SMS number that works without internet.</li><li>Later: news and official flood warnings added to this list.</li></ol></details>`}
+
+const AV={"W-17":"👷","W-22":"👷","V-12":"🕵️","S-04":"🛡️","PUB":"🙋"};USERS.forEach(u=>u.name=AV[u.id]+" "+u.name);
+$("user").innerHTML=USERS.map(u=>`<option value="${u.id}">${u.name}</option>`).join("");
+/* Temporary storage: keeps data in this browser only (no database). */
+const STORE_KEY="aidtrace-demo-v1";
+function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify({seq,H,D,A,C,ALERTS,V:VILLAGES}))}catch(e){}}
+function loadState(){try{const raw=localStorage.getItem(STORE_KEY);if(!raw)return false;const s=JSON.parse(raw);
+ if(!s||!["H","D","A","C","ALERTS"].every(k=>Array.isArray(s[k])))return false;
+ seq=s.seq||1;H=s.H;D=s.D;A=s.A;C=s.C;ALERTS=s.ALERTS;
+ if(Array.isArray(s.V)){VILLAGES.length=0;s.V.forEach(v=>VILLAGES.push(v))}
+ return true}catch(e){return false}}
+const _renderBase=render;render=function(){_renderBase();saveState()};
+if(!loadState())seedC();
+render();
+</script>
+</body>
+</html>
